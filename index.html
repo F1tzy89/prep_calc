@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prep Cases/Units Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 16px;
+    }
+
+    .calculator-wrapper {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    .calculator {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      border: 1px solid #e5e7eb;
+      padding: 18px 16px;
+    }
+
+    @media (min-width: 640px) {
+      .calculator { padding: 22px 24px; }
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+
+    .section {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .section:first-of-type {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    .section-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .subsection-title {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #4b5563;
+      margin: 10px 0 4px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: #4b5563;
+      margin-bottom: 4px;
+    }
+
+    .forecast-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .forecast-row > div {
+      flex: 1 1 180px;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    input[type="number"]:focus,
+    input[type="text"]:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
+    }
+
+    .input-prefix {
+      display: flex;
+      align-items: center;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      overflow: hidden;
+      background: #f9fafb;
+    }
+
+    .input-prefix span {
+      padding: 7px 9px;
+      font-size: 0.9rem;
+      color: #4b5563;
+      border-right: 1px solid #e5e7eb;
+      background: #f3f4f6;
+    }
+
+    .input-prefix input {
+      border: none;
+      border-radius: 0;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #3b82f6;
+      color: #ffffff;
+    }
+
+    .btn:hover { background: #2563eb; }
+
+    .small-note {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    .error {
+      color: #b91c1c;
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+
+    .items-table-wrapper { margin-top: 6px; overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th, td {
+      padding: 6px 4px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      text-align: left;
+      font-weight: 500;
+      font-size: 0.75rem;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+
+    .unit-value-cell .input-prefix {
+      background: #ffffff;
+    }
+
+    .qty-cell {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: #111827;
+      min-width: 70px;
+    }
+
+    .result-panel {
+      margin-top: 18px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      font-size: 0.85rem;
+      display: none;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .result-panel strong { color: #111827; }
+  </style>
+</head>
+<body>
+  <div class="calculator-wrapper">
+    <div class="calculator">
+      <h1>Prep Units Calculator</h1>
+      <p class="subtitle">
+        Enter today’s forecast in £. For each item, enter the £ value of its prep unit (case, bag, 1/3 pan, packet, etc.).
+        The calculator shows how many units to prep.
+      </p>
+
+      <!-- Forecast -->
+      <div class="section">
+        <div class="section-title">Forecast</div>
+        <div class="forecast-row">
+          <div>
+            <label for="forecastInput">Today’s forecast (£)</label>
+            <div class="input-prefix">
+              <span>£</span>
+              <input type="number" id="forecastInput" placeholder="1500" min="0" />
+            </div>
+            <div id="forecastError" class="error" style="display:none;"></div>
+          </div>
+          <div style="flex:0 0 auto;">
+            <button id="calculateBtn" class="btn" type="button">
+              Calculate prep
+            </button>
+          </div>
+        </div>
+        <div class="small-note">
+          Example: forecast £1500 and unit value £850 → 1500 ÷ 850 = 1.76 → <strong>2 units</strong>.
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div class="section">
+        <div class="section-title">Items & prep units</div>
+        <p class="small-note">
+          Fixed list – just enter the £ value per prep unit. Values are saved on this device.
+        </p>
+
+        <div id="sectionsContainer"></div>
+      </div>
+
+      <!-- Summary -->
+      <div id="summaryPanel" class="result-panel">
+        <div>
+          Forecast used: <strong id="summaryForecast"></strong>
+        </div>
+        <div>
+          Rule: <strong>units = ceil(forecast ÷ value per unit)</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Fixed items and their prep units
+    const ITEMS = [
+      // Meat section
+      { id: "meat",         name: "Meat",          section: "Meat",    unitLabel: "case" },
+      { id: "bacon",        name: "Bacon",         section: "Meat",    unitLabel: "packet" },
+      { id: "dogs",         name: "Dogs",          section: "Meat",    unitLabel: "packet" },
+
+      // Produce section
+      { id: "cheese",       name: "Cheese",        section: "Produce", unitLabel: "case" },
+      { id: "lettuce",      name: "Lettuce",       section: "Produce", unitLabel: "case" },
+      { id: "jalapenos",    name: "Jalapenos",     section: "Produce", unitLabel: "1/3 pan" },
+      { id: "greenpepper",  name: "Green Pepper",  section: "Produce", unitLabel: "1/3 pan" },
+      { id: "lettucewraps", name: "Lettuce wraps", section: "Produce", unitLabel: "1/3 pan" },
+      { id: "tomato",       name: "Tomatoes",      section: "Produce", unitLabel: "case" },
+      { id: "pickles",      name: "Pickles",       section: "Produce", unitLabel: "jar" },
+      { id: "mushroom",     name: "Mushroom",      section: "Produce", unitLabel: "bag" },
+      { id: "onions",       name: "Onions",        section: "Produce", unitLabel: "bag" },
+
+      // Fries section
+      { id: "potatoes",     name: "Potatoes",      section: "Fries",   unitLabel: "bag" }
+    ];
+
+    const STORAGE_KEY = "prepUnitValues_v1";
+
+    (function () {
+      const forecastInput = document.getElementById("forecastInput");
+      const forecastError = document.getElementById("forecastError");
+      const calculateBtn = document.getElementById("calculateBtn");
+      const summaryPanel = document.getElementById("summaryPanel");
+      const summaryForecast = document.getElementById("summaryForecast");
+      const sectionsContainer = document.getElementById("sectionsContainer");
+
+      // Build the tables for each section (Meat / Produce / Fries)
+      function renderSections() {
+        const sections = ["Meat", "Produce", "Fries"];
+        const saved = loadUnitValues();
+
+        sections.forEach(sectionName => {
+          const sectionItems = ITEMS.filter(item => item.section === sectionName);
+          if (sectionItems.length === 0) return;
+
+          const sectionDiv = document.createElement("div");
+
+          const title = document.createElement("div");
+          title.className = "subsection-title";
+          title.textContent = sectionName;
+          sectionDiv.appendChild(title);
+
+          const wrapper = document.createElement("div");
+          wrapper.className = "items-table-wrapper";
+
+          const table = document.createElement("table");
+          const thead = document.createElement("thead");
+          thead.innerHTML = `
+            <tr>
+              <th>Item</th>
+              <th>Prep unit</th>
+              <th>Value per unit (£)</th>
+              <th style="text-align:right;">Units needed</th>
+            </tr>
+          `;
+          table.appendChild(thead);
+
+          const tbody = document.createElement("tbody");
+
+          sectionItems.forEach(item => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${item.name}</td>
+              <td>${item.unitLabel}</td>
+              <td class="unit-value-cell">
+                <div class="input-prefix">
+                  <span>£</span>
+                  <input type="number"
+                         id="value-${item.id}"
+                         min="0"
+                         step="0.01" />
+                </div>
+              </td>
+              <td class="qty-cell" id="qty-${item.id}">–</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          table.appendChild(tbody);
+          wrapper.appendChild(table);
+          sectionDiv.appendChild(wrapper);
+
+          sectionsContainer.appendChild(sectionDiv);
+        });
+
+        // Apply saved values
+        for (const [id, value] of Object.entries(saved)) {
+          const input = document.getElementById("value-" + id);
+          if (input) input.value = value;
+        }
+
+        // Attach change listeners to save values and (optionally) recalc
+        ITEMS.forEach(item => {
+          const input = document.getElementById("value-" + item.id);
+          if (input) {
+            input.addEventListener("change", () => {
+              saveUnitValues();
+              calculateUnits(); // auto recalc when unit values change
+            });
+          }
+        });
+      }
+
+      function loadUnitValues() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === "object" ? parsed : {};
+        } catch (e) {
+          console.error("Failed to load unit values", e);
+          return {};
+        }
+      }
+
+      function saveUnitValues() {
+        const data = {};
+        ITEMS.forEach(item => {
+          const input = document.getElementById("value-" + item.id);
+          if (!input) return;
+          const val = parseFloat(input.value);
+          if (!isNaN(val) && val > 0) {
+            data[item.id] = val;
+          }
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+
+      function formatMoney(n) {
+        if (isNaN(n)) return "£0.00";
+        return "£" + n.toFixed(2);
+      }
+
+      function calculateUnits() {
+        forecastError.style.display = "none";
+        forecastError.textContent = "";
+
+        const raw = forecastInput.value.trim();
+        const forecast = parseFloat(raw);
+
+        if (isNaN(forecast) || forecast <= 0) {
+          forecastError.textContent = "Please enter a positive forecast amount (in £).";
+          forecastError.style.display = "block";
+          summaryPanel.style.display = "none";
+          // Clear results
+          ITEMS.forEach(item => {
+            const cell = document.getElementById("qty-" + item.id);
+            if (cell) cell.textContent = "–";
+          });
+          return;
+        }
+
+        ITEMS.forEach(item => {
+          const input = document.getElementById("value-" + item.id);
+          const cell = document.getElementById("qty-" + item.id);
+          if (!input || !cell) return;
+
+          const unitValue = parseFloat(input.value);
+          if (isNaN(unitValue) || unitValue <= 0) {
+            cell.textContent = "–";
+            return;
+          }
+
+          const rawUnits = forecast / unitValue;
+          const units = Math.ceil(rawUnits); // round UP to whole prep units
+
+          cell.textContent = `${units} x ${item.unitLabel}`;
+        });
+
+        saveUnitValues();
+
+        summaryForecast.textContent = formatMoney(forecast);
+        summaryPanel.style.display = "flex";
+      }
+
+      // Set up
+      renderSections();
+      calculateBtn.addEventListener("click", calculateUnits);
+      forecastInput.addEventListener("change", calculateUnits);
+    })();
+  </script>
+</body>
+</html>
